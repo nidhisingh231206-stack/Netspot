@@ -18,25 +18,17 @@ int main()
             );
         });
 
-    server.Get("/api/reading",
-        [](const httplib::Request&, httplib::Response& res)
-        {
-            res.set_header("Access-Control-Allow-Origin", "*");
+   server.Get("/api/reading",
+    [](const httplib::Request&, httplib::Response& res)
+    {
+        res.set_header("Access-Control-Allow-Origin", "*");
 
-            res.set_content(
-                R"({
-                    "location": "Test Location",
-                    "signalStrengthDbm": null,
-                    "downloadMbps": 86.0,
-                    "uploadMbps": 42.0,
-                    "latencyMs": 18.0,
-                    "latitude": null,
-                    "longitude": null,
-                    "simulated": true
-                })",
-                "application/json"
-            );
-        });
+        res.status = 404;
+        res.set_content(
+            R"({"error":"No real reading available yet"})",
+            "application/json"
+        );
+    });
 
     cout << "NetSpot API server starting..." << endl;
     cout << "Health: http://127.0.0.1:8080/health" << endl;
