@@ -5,6 +5,8 @@
 #include "ReadingList.h"
 #include "json.hpp"
 
+using json = nlohmann::json;
+
 int main()
 {
     httplib::Server server;
