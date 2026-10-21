@@ -30,6 +30,27 @@ int main()
         );
     });
 
+    server.Post("/api/reading", [](const httplib::Request& req,
+                               httplib::Response& res) {
+    res.set_header("Access-Control-Allow-Origin", "*");
+    res.set_header("Access-Control-Allow-Headers", "Content-Type");
+    res.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+
+    if (req.body.empty()) {
+        res.status = 400;
+        res.set_content(
+            R"({"error":"Request body is empty"})",
+            "application/json"
+        );
+        return;
+    }
+
+    res.set_content(
+        R"({"status":"received","message":"Reading received by NetSpot"})",
+        "application/json"
+    );
+});
+
     cout << "NetSpot API server starting..." << endl;
     cout << "Health: http://127.0.0.1:8080/health" << endl;
     cout << "Reading: http://127.0.0.1:8080/api/reading" << endl;
