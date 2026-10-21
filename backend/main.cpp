@@ -96,6 +96,34 @@ if (!reading.is_object())
     );
     return;
 }
+            
+if (!reading.contains("latitude") ||
+    !reading.contains("longitude") ||
+    !reading["latitude"].is_number() ||
+    !reading["longitude"].is_number())
+{
+    res.status = 400;
+    res.set_content(
+        R"({"error":"Valid numeric latitude and longitude are required"})",
+        "application/json"
+    );
+    return;
+}
+
+double latitude = reading["latitude"].get<double>();
+double longitude = reading["longitude"].get<double>();
+
+if (latitude < -90 || latitude > 90 ||
+    longitude < -180 || longitude > 180)
+{
+    res.status = 400;
+    res.set_content(
+        R"({"error":"Latitude or longitude is out of range"})",
+        "application/json"
+    );
+    return;
+}
+
 
             // Store the submitted JSON text in the linked list
             readings.append(req.body);
