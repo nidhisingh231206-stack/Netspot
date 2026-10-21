@@ -3,6 +3,7 @@
 #include <string>
 #include "httplib.h"
 #include "ReadingList.h"
+#include "json.hpp"
 
 int main()
 {
