@@ -1,1 +1,136 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetSpot - Live Location</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f4f7fb;
+            color: #172033;
+        }
+        main {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+        }
+        button {
+            padding: 12px 18px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        pre {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <h1>NetSpot</h1>
+    <p>Automatic device location collection</p>
+    <p id="status">Press Start and allow location access.</p>
+    <pre id="details">No readings collected yet.</pre>
+    <button id="start">Start collection</button>
+    <button id="stop">Stop collection</button>
+</main>
+
+<script>
+const API = "http://127.0.0.1:8080/api/reading";
+
+let watchId = null;
+let lastSentAt = 0;
+
+const statusBox = document.getElementById("status");
+const details = document.getElementById("details");
+
+document.getElementById("start").addEventListener("click", () => {
+    if (!("geolocation" in navigator)) {
+        statusBox.textContent =
+            "Geolocation is not supported by this browser.";
+        return;
+    }
+
+    if (watchId !== null) {
+        statusBox.textContent = "Collection is already running.";
+        return;
+    }
+
+    statusBox.textContent = "Requesting location permission...";
+
+    watchId = navigator.geolocation.watchPosition(
+        sendLocation,
+        error => {
+            statusBox.textContent =
+                "Location error: " + error.message;
+        },
+        {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 15000
+        }
+    );
+});
+
+async function sendLocation(position) {
+    const now = Date.now();
+
+    // Avoid sending updates too frequently.
+    if (now - lastSentAt < 2000) return;
+    lastSentAt = now;
+
+    const reading = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracyMeters: position.coords.accuracy,
+        timestamp: new Date(position.timestamp).toISOString(),
+        downloadMbps: null,
+        uploadMbps: null,
+        latencyMs: null,
+        signalStrengthDbm: null,
+        simulated: false
+    };
+
+    details.textContent = JSON.stringify(reading, null, 2);
+
+    try {
+        const response = await fetch(API, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(reading)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Request failed");
+        }
+
+        statusBox.textContent =
+            "Location sent to NetSpot successfully.";
+
+    } catch (error) {
+        statusBox.textContent =
+            "Could not send reading: " + error.message;
+    }
+}
+
+document.getElementById("stop").addEventListener("click", () => {
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+
+    statusBox.textContent = "Location collection stopped.";
+});
+</script>
+</body>
+</html>
+
