@@ -4,6 +4,7 @@
 #include "httplib.h"
 #include "ReadingList.h"
 #include "json.hpp"
+#include <cmath>
 
 using json = nlohmann::json;
 
@@ -123,6 +124,41 @@ if (latitude < -90 || latitude > 90 ||
     );
     return;
 }
+            
+if (!reading.contains("downloadMbps") ||
+    !reading.contains("uploadMbps") ||
+    !reading.contains("latencyMs") ||
+    !reading["downloadMbps"].is_number() ||
+    !reading["uploadMbps"].is_number() ||
+    !reading["latencyMs"].is_number())
+{
+    res.status = 400;
+    res.set_content(
+        R"({"error":"Download, upload, and latency must be numeric"})",
+        "application/json"
+    );
+    return;
+}
+
+double download = reading["downloadMbps"].get<double>();
+double upload = reading["uploadMbps"].get<double>();
+double latency = reading["latencyMs"].get<double>();
+
+if (!std::isfinite(download) ||
+    !std::isfinite(upload) ||
+    !std::isfinite(latency) ||
+    download < 0 ||
+    upload < 0 ||
+    latency < 0)
+{
+    res.status = 400;
+    res.set_content(
+        R"({"error":"Network measurements must be finite and non-negative"})",
+        "application/json"
+    );
+    return;
+}
+
 
 
             // Store the submitted JSON text in the linked list
