@@ -10,16 +10,17 @@ using json = nlohmann::json;
 
 int main()
 {
-    httplib::Server server;
+   httplib::Server server;
 
     // Linked-list storage for incoming readings
     ReadingList readings;
 
-    // 1. Health check
+    // 1. Health check endpoint
     server.Get("/health",
         [](const httplib::Request& req, httplib::Response& res)
         {
             res.set_header("Access-Control-Allow-Origin", "*");
+
             res.set_content(
                 R"({"status":"running","project":"NetSpot"})",
                 "application/json"
@@ -46,23 +47,31 @@ int main()
 
             res.set_content(latest, "application/json");
         });
-    // Handle browser CORS preflight requests
-server.Options("/api/reading",
-    [](const httplib::Request& req, httplib::Response& res)
-    {
-        res.set_header("Access-Control-Allow-Origin", "*");
-        res.set_header("Access-Control-Allow-Headers", "Content-Type");
-        res.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    });
 
-    // 3. Receive and store a reading
+    // 3. Handle browser CORS preflight requests
+    server.Options("/api/reading",
+        [](const httplib::Request& req, httplib::Response& res)
+        {
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_header("Access-Control-Allow-Headers", "Content-Type");
+            res.set_header(
+                "Access-Control-Allow-Methods",
+                "GET, POST, OPTIONS"
+            );
+        });
+
+    // 4. Receive, validate, and store readings
     server.Post("/api/reading",
         [&readings](const httplib::Request& req, httplib::Response& res)
         {
             res.set_header("Access-Control-Allow-Origin", "*");
             res.set_header("Access-Control-Allow-Headers", "Content-Type");
-            res.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            res.set_header(
+                "Access-Control-Allow-Methods",
+                "GET, POST, OPTIONS"
+            );
 
+            // Reject empty requests
             if (req.body.empty())
             {
                 res.status = 400;
@@ -72,96 +81,99 @@ server.Options("/api/reading",
                 );
                 return;
             }
+
+            // Parse JSON
             json reading;
 
-try
-{
-    reading = json::parse(req.body);
-}
-catch (const json::parse_error&)
-{
-    res.status = 400;
-    res.set_content(
-        R"({"error":"Invalid JSON"})",
-        "application/json"
-    );
-    return;
-}
+            try
+            {
+                reading = json::parse(req.body);
+            }
+            catch (const json::parse_error&)
+            {
+                res.status = 400;
+                res.set_content(
+                    R"({"error":"Invalid JSON"})",
+                    "application/json"
+                );
+                return;
+            }
 
-if (!reading.is_object())
-{
-    res.status = 400;
-    res.set_content(
-        R"({"error":"JSON must be an object"})",
-        "application/json"
-    );
-    return;
-}
-            
-if (!reading.contains("latitude") ||
-    !reading.contains("longitude") ||
-    !reading["latitude"].is_number() ||
-    !reading["longitude"].is_number())
-{
-    res.status = 400;
-    res.set_content(
-        R"({"error":"Valid numeric latitude and longitude are required"})",
-        "application/json"
-    );
-    return;
-}
+            // Ensure JSON is an object
+            if (!reading.is_object())
+            {
+                res.status = 400;
+                res.set_content(
+                    R"({"error":"JSON must be an object"})",
+                    "application/json"
+                );
+                return;
+            }
 
-double latitude = reading["latitude"].get<double>();
-double longitude = reading["longitude"].get<double>();
+            // Validate required coordinates
+            if (!reading.contains("latitude") ||
+                !reading.contains("longitude") ||
+                !reading["latitude"].is_number() ||
+                !reading["longitude"].is_number())
+            {
+                res.status = 400;
+                res.set_content(
+                    R"({"error":"Valid numeric latitude and longitude are required"})",
+                    "application/json"
+                );
+                return;
+            }
 
-if (latitude < -90 || latitude > 90 ||
-    longitude < -180 || longitude > 180)
-{
-    res.status = 400;
-    res.set_content(
-        R"({"error":"Latitude or longitude is out of range"})",
-        "application/json"
-    );
-    return;
-}
-            
-if (!reading.contains("downloadMbps") ||
-    !reading.contains("uploadMbps") ||
-    !reading.contains("latencyMs") ||
-    !reading["downloadMbps"].is_number() ||
-    !reading["uploadMbps"].is_number() ||
-    !reading["latencyMs"].is_number())
-{
-    res.status = 400;
-    res.set_content(
-        R"({"error":"Download, upload, and latency must be numeric"})",
-        "application/json"
-    );
-    return;
-}
+            double latitude = reading["latitude"].get<double>();
+            double longitude = reading["longitude"].get<double>();
 
-double download = reading["downloadMbps"].get<double>();
-double upload = reading["uploadMbps"].get<double>();
-double latency = reading["latencyMs"].get<double>();
+            if (!std::isfinite(latitude) ||
+                !std::isfinite(longitude) ||
+                latitude < -90 || latitude > 90 ||
+                longitude < -180 || longitude > 180)
+            {
+                res.status = 400;
+                res.set_content(
+                    R"({"error":"Latitude or longitude is out of range"})",
+                    "application/json"
+                );
+                return;
+            }
 
-if (!std::isfinite(download) ||
-    !std::isfinite(upload) ||
-    !std::isfinite(latency) ||
-    download < 0 ||
-    upload < 0 ||
-    latency < 0)
-{
-    res.status = 400;
-    res.set_content(
-        R"({"error":"Network measurements must be finite and non-negative"})",
-        "application/json"
-    );
-    return;
-}
+            // Validate optional network measurements
+            for (const char* field :
+                 {"downloadMbps", "uploadMbps", "latencyMs"})
+            {
+                if (reading.contains(field) &&
+                    !reading[field].is_null() &&
+                    !reading[field].is_number())
+                {
+                    res.status = 400;
+                    res.set_content(
+                        R"({"error":"Network measurements must be numeric or null"})",
+                        "application/json"
+                    );
+                    return;
+                }
 
+                if (reading.contains(field) &&
+                    reading[field].is_number())
+                {
+                    double value = reading[field].get<double>();
 
+                    if (!std::isfinite(value) || value < 0)
+                    {
+                        res.status = 400;
+                        res.set_content(
+                            R"({"error":"Measurements must be finite and non-negative"})",
+                            "application/json"
+                        );
+                        return;
+                    }
+                }
+            }
 
-            // Store the submitted JSON text in the linked list
+            // Store the validated JSON in the linked list
             readings.append(req.body);
 
             res.set_content(
@@ -170,6 +182,7 @@ if (!std::isfinite(download) ||
             );
         });
 
+    // 5. Start the server
     std::cout << "NetSpot server starting on "
               << "http://127.0.0.1:8080" << std::endl;
 
