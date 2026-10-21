@@ -45,6 +45,14 @@ int main()
 
             res.set_content(latest, "application/json");
         });
+    // Handle browser CORS preflight requests
+server.Options("/api/reading",
+    [](const httplib::Request& req, httplib::Response& res)
+    {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Headers", "Content-Type");
+        res.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    });
 
     // 3. Receive and store a reading
     server.Post("/api/reading",
@@ -63,6 +71,31 @@ int main()
                 );
                 return;
             }
+            json reading;
+
+try
+{
+    reading = json::parse(req.body);
+}
+catch (const json::parse_error&)
+{
+    res.status = 400;
+    res.set_content(
+        R"({"error":"Invalid JSON"})",
+        "application/json"
+    );
+    return;
+}
+
+if (!reading.is_object())
+{
+    res.status = 400;
+    res.set_content(
+        R"({"error":"JSON must be an object"})",
+        "application/json"
+    );
+    return;
+}
 
             // Store the submitted JSON text in the linked list
             readings.append(req.body);
