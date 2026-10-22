@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetSpot Dashboard</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #020d0c;
+    --panel: #041816;
+    --border: #075b49;
+    --green: #00ffc3;
+    --text: #b5e9dc;
+    --red: #ff4268;
+    --yellow: #ffd84d;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Courier New", monospace;
+    padding: 10px;
+}
+
+button {
+    cursor: pointer;
+    font: inherit;
+}
+
+.app {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 12px;
+}
+
+.sidebar, .panel, .metric, .topbar {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 0 12px #00ffc30c;
+}
+
+.sidebar {
+    min-height: 96vh;
+    padding: 18px 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.brand {
+    color: var(--green);
+    font-size: 25px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    padding: 10px 5px 25px;
+    border-bottom: 1px solid var(--border);
+}
+
+.brand small {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 1px;
+    margin-top: 7px;
+}
+
+.nav {
+    margin-top: 25px;
+    display: grid;
+    gap: 10px;
+}
+
+.nav button {
+    color: var(--text);
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 14px 10px;
+    text-align: left;
+    border-radius: 7px;
+}
+
+.nav button:hover,
+.nav button.active {
+    background: #07513e;
+    border-color: var(--green);
+    color: white;
+    box-shadow: 0 0 12px #00ffc330;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 12px;
+    color: var(--green);
+    font-size: 12px;
+}
+
+main {
+    min-width: 0;
+}
+
+.topbar {
+    padding: 17px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    font-size: 12px;
+}
+
+.topbar strong {
+    color: var(--green);
+}
+
+h2 {
+    color: var(--green);
+    font-size: 23px;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 12px;
+    margin-bottom: 15px;
+}
+
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 15px 0;
+}
+
+.metric {
+    padding: 17px;
+    min-width: 0;
+}
+
+.metric h4 {
+    font-size: 12px;
+    color: var(--green);
+    margin-bottom: 14px;
+}
+
+.metric .value {
+    font-size: 28px;
+    color: white;
+    margin-bottom: 7px;
+}
+
+.metric small {
+    color: var(--green);
+}
+
+.content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 12px;
+}
+
+.left, .right {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+}
+
+.panel {
+    padding: 14px;
+    min-width: 0;
+}
+
+.panel h3 {
+    color: var(--green);
+    font-size: 14px;
+    margin-bottom: 14px;
+}
+
+.map {
+    position: relative;
+    height: 380px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background:
+        radial-gradient(ellipse at 20% 30%,
+            #b9ff004f, transparent 22%),
+        radial-gradient(ellipse at 50% 50%,
+            #00ff6570, transparent 27%),
+        radial-gradient(ellipse at 80% 25%,
+            #ff263d70, transparent 20%),
+        radial-gradient(ellipse at 75% 75%,
+            #baff004c, transparent 22%),
+        repeating-linear-gradient(
+            35deg,
+            #103a2c 0px,
+            #103a2c 35px,
+            #1d5039 36px,
+            #071e18 48px
+        );
+}
+
+.map::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        120deg,
+        transparent 0 65px,
+        #8bba8a28 66px 69px,
+        transparent 70px 120px
+    );
+}
+
+.building {
+    position: absolute;
+    z-index: 2;
+    background: #031a16e8;
+    border: 1px solid #07846a;
+    border-radius: 4px;
+    padding: 7px;
+    font-size: 10px;
+    color: white;
+}
+
+.hostel { top: 15%; left: 20%; }
+.academic { top: 24%; left: 48%; }
+.library { top: 19%; right: 10%; }
+.engineering { top: 53%; left: 40%; }
+.sports { top: 51%; left: 10%; }
+.cafe { bottom: 18%; left: 45%; }
+.admin { bottom: 30%; right: 8%; }
+
+.pin {
+    position: absolute;
+    z-index: 3;
+    border-radius: 50%;
+    border: 1px solid var(--green);
+    background: #00ffc330;
+    color: var(--green);
+    width: 25px;
+    height: 25px;
+    box-shadow: 0 0 12px var(--green);
+}
+
+.pin.warning {
+    color: var(--yellow);
+    border-color: var(--yellow);
+    box-shadow: 0 0 12px #ffd84d;
+}
+
+.pin.danger {
+    color: var(--red);
+    border-color: var(--red);
+    box-shadow: 0 0 12px var(--red);
+}
+
+.p1 { top: 20%; left: 13%; }
+.p2 { top: 30%; left: 30%; }
+.p3 { top: 24%; left: 49%; }
+.p4 { top: 34%; right: 28%; }
+.p5 { top: 30%; right: 12%; }
+.p6 { top: 57%; left: 38%; }
+.p7 { bottom: 25%; left: 24%; }
+.p8 { bottom: 18%; right: 23%; }
+.p9 { bottom: 28%; right: 10%; }
+
+.legend {
+    position: absolute;
+    z-index: 4;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    background: #02120fee;
+    border: 1px solid var(--border);
+    padding: 9px;
+    font-size: 10px;
+    line-height: 2;
+}
+
+.legend span {
+    margin-right: 8px;
+}
+
+.alert {
+    padding: 12px;
+    border: 1px solid #9b7e26;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    background: #27200a66;
+}
+
+.alert strong {
+    display: block;
+    color: var(--yellow);
+    margin-bottom: 8px;
+}
+
+.alert.danger {
+    border-color: #85273e;
+    background: #30101a66;
+}
+
+.alert.danger strong {
+    color: var(--red);
+}
+
+.alert p {
+    margin-top: 7px;
+    line-height: 1.6;
+}
+
+.status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 0;
+    border-bottom: 1px solid #07544880;
+    font-size: 12px;
+}
+
+.toggle {
+    border: none;
+    border-radius: 20px;
+    width: 38px;
+    height: 20px;
+    background: var(--green);
+    position: relative;
+}
+
+.toggle::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    right: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+}
+
+.toggle.off {
+    background: #465550;
+}
+
+.toggle.off::after {
+    right: auto;
+    left: 3px;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    min-width: 620px;
+    border-collapse: collapse;
+    font-size: 11px;
+}
+
+th, td {
+    padding: 11px 8px;
+    text-align: left;
+    border-bottom: 1px solid #075448;
+}
+
+th {
+    background: #062820;
+    color: var(--green);
+}
+
+td {
+    color: #b5d8ce;
+}
+
+tr:hover td {
+    background: #00ffc30d;
+}
+
+.good { color: var(--green); }
+.bad { color: var(--red); }
+.medium { color: var(--yellow); }
+
+.action {
+    background: #063b2e;
+    border: 1px solid var(--border);
+    color: var(--green);
+    padding: 10px;
+    border-radius: 5px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.action:hover {
+    background: #087052;
+}
+
+#toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    padding: 12px 18px;
+    background: #05251e;
+    border: 1px solid var(--green);
+    border-radius: 7px;
+    display: none;
+    z-index: 10;
+    font-size: 12px;
+}
+
+@media(max-width:1100px) {
+    .app {
+        grid-template-columns: 200px minmax(0, 1fr);
+    }
+
+    .metrics {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .content {
+        grid-template-columns: 1fr;
+    }
+
+    .right {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media(max-width:650px) {
+    .app {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        min-height: auto;
+    }
+
+    .nav {
+        grid-template-columns: repeat(2, 1fr);
+        margin-top: 12px;
+    }
+
+    .sidebar-footer {
+        display: none;
+    }
+
+    .topbar {
+        flex-wrap: wrap;
+    }
+
+    .metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .right {
+        grid-template-columns: 1fr;
+    }
+
+    .map {
+        height: 320px;
+    }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<aside class="sidebar">
+    <div class="brand">
+        NETSPOT
+        <small>CAMPUS WI-FI MONITORING</small>
+    </div>
+
+    <nav class="nav">
+        <button class="active" data-page="Dashboard">⌂ Dashboard</button>
+        <button data-page="Campus Map">▧ Campus Map</button>
+        <button data-page="Access Points">⌁ Access Points</button>
+        <button data-page="Analytics">▥ Analytics</button>
+        <button data-page="Alerts">♧ Alerts</button>
+        <button data-page="Settings">⚙ Settings</button>
+    </nav>
+
+    <div class="sidebar-footer">
+        NETSPOT v1.0<br><br>
+        Smart Campus Connectivity
+    </div>
+</aside>
+
+<main>
+    <header class="topbar">
+        <div>CONNECT &nbsp; / &nbsp; MONITOR &nbsp; / &nbsp; OPTIMIZE</div>
+        <div>
+            <strong>Graphic Era University</strong><br>
+            Dehradun, Uttarakhand
+        </div>
+        <div>
+            <span id="clock"></span><br>
+            <span class="good">● Live Data</span>
+        </div>
+    </header>
+
+    <h2 id="pageTitle">SYSTEM OVERVIEW</h2>
+    <p class="subtitle">CAMPUS NETWORK STATUS</p>
+
+    <section class="metrics">
+        <article class="metric">
+            <h4>⌁ ACTIVE ACCESS POINTS</h4>
+            <div class="value">24 <small>/ 28</small></div>
+            <small>▲ 7%</small>
+        </article>
+
+        <article class="metric">
+            <h4>▣ CONNECTED DEVICES</h4>
+            <div class="value">1,204</div>
+            <small>▲ 12%</small>
+        </article>
+
+        <article class="metric">
+            <h4>▥ AVG SIGNAL</h4>
+            <div class="value">-58 <small>dBm</small></div>
+            <small>▲ 6%</small>
+        </article>
+
+        <article class="metric">
+            <h4>◴ DOWNLOAD SPEED</h4>
+            <div class="value">86 <small>Mbps</small></div>
+            <small>▲ 18%</small>
+        </article>
+    </section>
+
+    <section class="content">
+        <div class="left">
+
+            <section class="panel">
+                <h3>▧ CAMPUS COVERAGE MAP</h3>
+
+                <div class="map" id="campusMap">
+                    <div class="building hostel">Hostel Block</div>
+                    <div class="building academic">Academic Block</div>
+                    <div class="building library">Library Block</div>
+                    <div class="building engineering">Engineering Block</div>
+                    <div class="building sports">Sports Complex</div>
+                    <div class="building cafe">Cafeteria</div>
+                    <div class="building admin">Admin Block</div>
+
+                    <button class="pin warning p1" data-place="Hostel Block">⌁</button>
+                    <button class="pin p2" data-place="Hostel Block">⌁</button>
+                    <button class="pin p3" data-place="Academic Block">⌁</button>
+                    <button class="pin warning p4" data-place="Engineering Block">⌁</button>
+                    <button class="pin danger p5" data-place="Library Block">⌁</button>
+                    <button class="pin p6" data-place="Engineering Block">⌁</button>
+                    <button class="pin warning p7" data-place="Sports Complex">⌁</button>
+                    <button class="pin p8" data-place="Cafeteria">⌁</button>
+                    <button class="pin warning p9" data-place="Admin Block">⌁</button>
+
+                    <div class="legend">
+                        Signal Strength (dBm)<br>
+                        <span class="good">● -30 to -50 Good</span>
+                        <span class="medium">● -51 to -70 Fair</span>
+                        <span class="bad">● -71 to -90 Weak</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h3>⌁ RECENT READINGS</h3>
+
+                <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>LOCATION</th>
+                            <th>ACCESS POINT</th>
+                            <th>SIGNAL</th>
+                            <th>DOWNLOAD</th>
+                            <th>PING</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="readings">
+                        <tr>
+                            <td>1</td>
+                            <td>Academic Block</td>
+                            <td>AP-03</td>
+                            <td class="good">-52 dBm</td>
+                            <td>82.4 Mbps</td>
+                            <td>28 ms</td>
+                            <td class="good">●</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Library Block</td>
+                            <td>AP-07</td>
+                            <td class="bad">-82 dBm</td>
+                            <td>34.7 Mbps</td>
+                            <td>186 ms</td>
+                            <td class="bad">●</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Engineering Block</td>
+                            <td>AP-11</td>
+                            <td class="medium">-61 dBm</td>
+                            <td>66.2 Mbps</td>
+                            <td>64 ms</td>
+                            <td class="medium">●</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>Hostel Block</td>
+                            <td>AP-15</td>
+                            <td class="good">-48 dBm</td>
+                            <td>91.3 Mbps</td>
+                            <td>32 ms</td>
+                            <td class="good">●</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Cafeteria</td>
+                            <td>AP-18</td>
+                            <td class="medium">-70 dBm</td>
+                            <td>52.6 Mbps</td>
+                            <td>98 ms</td>
+                            <td class="medium">●</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+
+                <button class="action" id="export">↓ Export readings as CSV</button>
+            </section>
+        </div>
+
+        <aside class="right">
+            <section class="panel">
+                <h3>♧ NETWORK ALERTS</h3>
+
+                <div class="alert">
+                    <strong>⚠ Weak Signal Detected</strong>
+                    Library Block<br>
+                    <p>Signal below -75 dBm.<br>
+                    Current: -82 dBm</p>
+                </div>
+
+                <div class="alert danger">
+                    <strong>⚠ High Latency</strong>
+                    Engineering Lab<br>
+                    <p>Ping above 150 ms.<br>
+                    Current: 186 ms</p>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h3>⌁ NETWORK STATUS</h3>
+
+                <div class="status-row">
+                    Wi-Fi Network
+                    <button class="toggle" aria-label="Toggle Wi-Fi"></button>
+                </div>
+
+                <div class="status-row">
+                    Internet Connectivity
+                    <button class="toggle" aria-label="Toggle Internet"></button>
+                </div>
+
+                <div class="status-row">
+                    DHCP Service
+                    <button class="toggle" aria-label="Toggle DHCP"></button>
+                </div>
+
+                <div class="status-row">
+                    Firewall
+                    <button class="toggle" aria-label="Toggle Firewall"></button>
+                </div>
+
+                <div class="status-row">
+                    Load Balancing
+                    <button class="toggle" aria-label="Toggle Load Balancing"></button>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h3>QUICK ACTIONS</h3>
+                <button class="action" id="refresh">↻ Refresh Readings</button>
+                <button class="action" id="zoomIn">＋ Zoom Map In</button>
+                <button class="action" id="zoomOut">－ Zoom Map Out</button>
+            </section>
+        </aside>
+    </section>
+</main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const toast = document.getElementById("toast");
+
+function notify(message) {
+    toast.textContent = message;
+    toast.style.display = "block";
+
+    clearTimeout(window.toastTimer);
+
+    window.toastTimer = setTimeout(() => {
+        toast.style.display = "none";
+    }, 2200);
+}
+
+// Sidebar navigation
+document.querySelectorAll(".nav button").forEach(button => {
+    button.addEventListener("click", () => {
+        document.querySelectorAll(".nav button").forEach(item => {
+            item.classList.remove("active");
+        });
+
+        button.classList.add("active");
+
+        const page = button.dataset.page;
+
+        document.getElementById("pageTitle").textContent =
+            page === "Dashboard" ? "SYSTEM OVERVIEW" : page.toUpperCase();
+
+        notify(page + " selected");
+    });
+});
+
+// Network service toggles
+document.querySelectorAll(".toggle").forEach(toggle => {
+    toggle.addEventListener("click", () => {
+        toggle.classList.toggle("off");
+
+        const status = toggle.classList.contains("off")
+            ? "OFF"
+            : "ON";
+
+        notify("Service status changed to " + status);
+    });
+});
+
+// Map access point details
+document.querySelectorAll(".pin").forEach(pin => {
+    pin.addEventListener("click", () => {
+        notify("Access point location: " + pin.dataset.place);
+    });
+});
+
+// Refresh demo readings
+document.getElementById("refresh").addEventListener("click", () => {
+    const time = new Date().toLocaleTimeString();
+
+    document.querySelectorAll("#readings tr").forEach(row => {
+        row.cells[6].title = "Last refreshed: " + time;
+    });
+
+    notify("Demo readings refreshed at " + time);
+});
+
+// Map zoom
+let zoom = 1;
+
+document.getElementById("zoomIn").addEventListener("click", () => {
+    zoom = Math.min(zoom + 0.1, 1.5);
+
+    document.getElementById("campusMap").style.backgroundSize =
+        (zoom * 100) + "%";
+
+    notify("Map zoom: " + Math.round(zoom * 100) + "%");
+});
+
+document.getElementById("zoomOut").addEventListener("click", () => {
+    zoom = Math.max(zoom - 0.1, 0.7);
+
+    document.getElementById("campusMap").style.backgroundSize =
+        (zoom * 100) + "%";
+
+    notify("Map zoom: " + Math.round(zoom * 100) + "%");
+});
+
+// Export table data
+document.getElementById("export").addEventListener("click", () => {
+    const rows = [...document.querySelectorAll("table tr")];
+
+    const csv = rows.map(row =>
+        [...row.querySelectorAll("th, td")]
+            .map(cell => '"' + cell.innerText.replace(/"/g, '""') + '"')
+            .join(",")
+    ).join("\n");
+
+    const blob = new Blob([csv], {
+        type: "text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "netspot-readings.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
+
+    notify("CSV file exported");
+});
+
+// Live clock
+function updateClock() {
+    document.getElementById("clock").textContent =
+        new Date().toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        });
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+  </html>
