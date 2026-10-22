@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetSpot | Campus Wi-Fi Monitoring</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+:root{--bg:#020c0c;--panel:#031514;--panel2:#041c19;--line:#075448;--green:#00f5b8;--mint:#55ffd0;--muted:#6caaa0;--text:#c9fff0;--yellow:#ffd84d;--red:#ff4268}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0%,#063027 0%,#020c0c 58%);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer}.app{display:grid;grid-template-columns:265px minmax(0,1fr);min-height:100vh;gap:10px;padding:10px}
+.sidebar,.topbar,.panel,.metric,.subpanel{background:linear-gradient(145deg,rgba(4,29,25,.97),rgba(1,14,14,.98));border:1px solid var(--line);box-shadow:inset 0 0 18px #00c79b08,0 0 12px #00e9b01a}
+.sidebar{border-radius:14px;display:flex;flex-direction:column;padding:16px 12px;min-height:calc(100vh - 20px)}
+.brand{display:flex;align-items:center;gap:12px;padding:5px 5px 22px;border-bottom:1px solid #075448;margin-bottom:20px}
+.logo{width:58px;height:58px;border:1px solid #087b68;border-radius:14px;display:grid;place-items:center;color:var(--green);font-size:34px;text-shadow:0 0 14px var(--green);box-shadow:0 0 20px #00f5b822}
+.brand h1{font-size:27px;letter-spacing:3px;line-height:1;margin:0;color:var(--green);text-shadow:0 0 12px #00f5b866}.brand small{display:block;font-size:10px;letter-spacing:1.5px;color:#8fe8d2;margin-top:5px}
+.nav{display:grid;gap:7px}.nav button{border:1px solid transparent;background:transparent;text-align:left;border-radius:8px;padding:12px 13px;color:#9cc9c0;font-size:17px;letter-spacing:.5px;transition:.2s}.nav button span{display:inline-block;width:29px;font-size:20px;color:#86d8c7}.nav button.active,.nav button:hover{background:linear-gradient(90deg,#006a50,#034b3d);border-color:#00d6a1;color:#e2fff7;box-shadow:0 0 15px #00f5b833}
+.nav button.active{outline:1px solid #00a77e}.nav .count{float:right;background:#ff365f;color:white;border-radius:20px;padding:0px 7px;font-size:13px}
+.sidebar-foot{margin-top:auto;border:1px solid #075448;border-radius:9px;padding:14px 10px;color:#00dba4;background:linear-gradient(135deg,#05211d,#02100f)}.sidebar-foot strong{display:block;letter-spacing:2px}.sidebar-foot small{color:#70b9a9}
+main{min-width:0}.topbar{height:62px;border-radius:9px;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;gap:15px;margin-bottom:10px}
+.toplinks{display:flex;gap:22px;letter-spacing:1px;font-size:13px;color:#6eab9e;white-space:nowrap}.toplinks span:first-child{color:var(--green)}.university{border-left:1px solid var(--line);padding-left:20px;font-size:13px;min-width:230px}.university b{color:var(--green);display:block}.date{border:1px solid var(--line);border-radius:6px;padding:7px 12px;font-size:12px;min-width:125px}.live{color:var(--green)}
+.heading{display:flex;align-items:center;justify-content:space-between;padding:3px 16px 10px;gap:10px}.heading h2{margin:0;color:var(--green);font-size:24px;letter-spacing:2px;line-height:1.1}.heading p{margin:2px 0 0;font-size:13px;color:#87bdb2;letter-spacing:1px}.health{border:1px solid var(--line);border-radius:9px;padding:9px 13px;font-size:13px;display:flex;gap:13px;align-items:center;white-space:nowrap}.dot{display:inline-block;width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 9px var(--green);margin-right:6px}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}.metric{border-radius:9px;padding:13px;min-height:105px;position:relative;overflow:hidden}.metric-top{display:flex;align-items:center;gap:10px;color:#70d9c2;font-size:13px;font-weight:600}.metric-icon{width:37px;height:37px;display:grid;place-items:center;border-radius:50%;background:#063b30;color:var(--green);font-size:23px;box-shadow:0 0 14px #00f5b81a}.value{font-size:29px;line-height:1.2;margin:4px 0 0 47px;color:#d7fff4;letter-spacing:1px}.value small{font-size:15px;color:#8bd4c2}.trend{font-size:12px;color:#00ed9e;margin-left:47px}.spark{position:absolute;right:10px;bottom:17px;width:80px;height:30px;opacity:.8}.spark polyline{fill:none;stroke:var(--green);stroke-width:2}
+.content-grid{display:grid;grid-template-columns:minmax(0,1fr) 315px;gap:11px}.left-column,.right-column{display:grid;gap:11px;align-content:start}.panel{border-radius:10px;padding:12px;min-width:0}.panel-title{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px;font-size:16px;color:#68fbd1;letter-spacing:.7px}.panel-title small{font-size:11px;color:#6da99c;letter-spacing:0}
+.map{height:400px;position:relative;overflow:hidden;border:1px solid #08745d;border-radius:7px;background:
+radial-gradient(ellipse at 20% 26%,#25bd4d70 0 5%,transparent 16%),
+radial-gradient(ellipse at 42% 55%,#00e85a75 0 8%,transparent 20%),
+radial-gradient(ellipse at 70% 33%,#00c85c70 0 9%,transparent 22%),
+radial-gradient(ellipse at 82% 74%,#a9ed0060 0 7%,transparent 19%),
+radial-gradient(ellipse at 52% 80%,#00d98b55 0 9%,transparent 22%),
+linear-gradient(28deg,transparent 0 20%,#2e75504d 20.5% 22%,transparent 22.5% 42%,#488b5140 42.5% 44%,transparent 44.5%),
+linear-gradient(110deg,#06231e,#103d2c 35%,#0b3329 60%,#061b19);background-size:cover}
+.map:before{content:"";position:absolute;inset:-20px;background-image:linear-gradient(28deg,transparent 47%,#8fb79b26 48%,#8fb79b26 49%,transparent 50%),linear-gradient(145deg,transparent 45%,#82b49a28 46%,#82b49a28 47%,transparent 48%),repeating-linear-gradient(90deg,transparent 0 70px,#7cb5a017 72px 75px);transform:rotate(-5deg)}
+.road{position:absolute;height:11px;background:#294b3c;border:2px solid #597d61;opacity:.8;transform:rotate(-13deg);width:120%;left:-8%;top:49%;box-shadow:0 0 8px #000}.road.r2{top:25%;transform:rotate(18deg)}.road.r3{top:76%;transform:rotate(7deg)}
+.building{position:absolute;background:linear-gradient(135deg,#225843,#0d3428);border:1px solid #74b28b66;box-shadow:0 0 12px #00f5b81b;transform:rotate(-8deg);padding:8px 10px;border-radius:4px;color:#d3fff0;font-size:12px;z-index:2}
+.b1{top:13%;left:21%}.b2{top:24%;left:48%}.b3{top:19%;right:13%}.b4{top:51%;left:42%}.b5{bottom:17%;left:45%}.b6{top:55%;right:9%}.b7{top:52%;left:13%}
+.heat{position:absolute;width:95px;height:75px;border-radius:50%;filter:blur(15px);opacity:.8;z-index:1}.h1{top:18%;left:10%;background:#d8ff00}.h2{top:44%;left:37%;background:#ffe600}.h3{top:22%;right:24%;background:#ff283c}.h4{bottom:16%;right:10%;background:#a9ff00}.h5{bottom:20%;left:19%;background:#ffb000}.h6{top:56%;left:53%;background:#fbff00}
+.pin{position:absolute;z-index:3;width:27px;height:27px;display:grid;place-items:center;border-radius:50%;border:1px solid #8affd9;background:#00bd8a44;color:#a4ffe6;box-shadow:0 0 12px #00ffb8;font-size:15px;cursor:pointer}.pin.warn{color:#ffe26c;border-color:#ffe26c;background:#a77b004c;box-shadow:0 0 12px #ffd84d}.pin.bad{color:#ff7087;border-color:#ff4268;background:#8c001e66;box-shadow:0 0 14px #ff4268}.p1{top:20%;left:13%}.p2{top:28%;left:28%}.p3{top:21%;left:48%}.p4{top:31%;left:61%}.p5{top:29%;right:27%}.p6{top:50%;left:36%}.p7{top:58%;left:48%}.p8{top:62%;right:22%}.p9{bottom:21%;left:25%}.p10{bottom:15%;left:53%}.p11{bottom:24%;right:14%}
+.compass{position:absolute;right:15px;top:12px;color:#b8ffe9;z-index:3}.zoom{position:absolute;right:13px;bottom:13px;display:grid;z-index:4}.zoom button{width:35px;height:35px;background:#021714e8;border:1px solid #08705c;font-size:21px}.legend{position:absolute;left:10px;bottom:10px;z-index:4;background:#031411e8;border:1px solid #075448;border-radius:6px;padding:8px 10px;font-size:11px;color:#b8e9dc}.legend span{margin-right:9px;white-space:nowrap}.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}.good{background:#00e78d}.fair{background:#ffd84d}.weak{background:#ff4268}
+.alert{padding:11px;border:1px solid #8d7730;background:linear-gradient(100deg,#30270a77,#11180f);border-radius:8px;margin:9px 0;box-shadow:inset 3px 0 #ffd84d}.alert.red{border-color:#7c2740;background:linear-gradient(100deg,#3b102177,#101312);box-shadow:inset 3px 0 #ff4268}.alert-head{display:flex;justify-content:space-between;font-size:12px;color:var(--yellow);font-weight:700}.alert.red .alert-head{color:#ff6982}.alert p{font-size:12px;margin:5px 0 0;color:#d0dfd7}.alert small{color:#8eaaa0}
+.status-row{display:flex;align-items:center;justify-content:space-between;padding:7px 2px;border-bottom:1px solid #07544880;font-size:13px;color:#9acfc0}.status-row:last-child{border:0}.status-name{display:flex;align-items:center;gap:9px}.toggle{width:40px;height:21px;border:1px solid #007b5c;border-radius:20px;background:#0b4335;position:relative}.toggle:after{content:"";position:absolute;width:15px;height:15px;top:2px;right:2px;border-radius:50%;background:#00f5b8;box-shadow:0 0 8px #00f5b8}.toggle.off{background:#292c2c;border-color:#52615d}.toggle.off:after{right:auto;left:2px;background:#71817b;box-shadow:none}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px;min-width:630px}th{text-align:left;color:#65cbb3;background:#05251f;padding:8px;border:1px solid #075448;font-weight:600}td{padding:7px 8px;border-bottom:1px solid #064137;color:#a9d9cc}tr:hover td{background:#00f5b80b}.signal-good{color:#00ed9e}.signal-bad{color:#ff8b5b}.status-dot{width:8px;height:8px;display:inline-block;border-radius:50%;background:#00ed9e;box-shadow:0 0 7px currentColor}.status-dot.warn{background:#ffd84d}.status-dot.bad{background:#ff4268}
+.toast{position:fixed;bottom:20px;right:20px;background:#04251e;border:1px solid var(--green);padding:12px 18px;border-radius:8px;box-shadow:0 0 20px #00f5b833;display:none;z-index:10}
+@media(max-width:1200px){.app{grid-template-columns:220px minmax(0,1fr)}.content-grid{grid-template-columns:minmax(0,1fr) 270px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.university{min-width:170px}.toplinks{gap:10px}}
+@media(max-width:900px){.app{grid-template-columns:1fr;padding:7px}.sidebar{min-height:auto;padding:10px}.brand{padding-bottom:10px;margin-bottom:10px}.logo{width:44px;height:44px}.brand h1{font-size:23px}.nav{grid-template-columns:repeat(3,minmax(0,1fr))}.nav button{padding:9px;font-size:14px}.sidebar-foot{display:none}.content-grid{grid-template-columns:1fr}.right-column{grid-template-columns:repeat(2,minmax(0,1fr))}.toplinks{display:none}.topbar{height:auto;flex-wrap:wrap}.university{flex:1}.heading{padding:8px 3px}}
+@media(max-width:560px){.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.metrics{grid-template-columns:1fr 1fr;gap:7px}.metric{padding:9px;min-height:110px}.metric-top{font-size:11px;gap:5px}.metric-icon{width:29px;height:29px;font-size:17px}.value{margin-left:0;font-size:24px}.trend{margin-left:0}.spark{width:55px;opacity:.45}.right-column{grid-template-columns:1fr}.health{font-size:11px;padding:7px}.heading h2{font-size:20px}.map{height:330px}.legend{font-size:9px;max-width:85%}.legend span{margin-right:4px}.university{min-width:0;padding-left:10px}.date{min-width:110px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">⌁</div><div><h1>NETSPOT</h1><small>CAMPUS WI-FI MONITORING</small></div></div>
+  <nav class="nav" aria-label="Main navigation">
+    <button class="active" data-page="Dashboard"><span>⌂</span> Dashboard</button>
+    <button data-page="Campus Map"><span>◫</span> Campus Map</button>
+    <button data-page="Access Points"><span>♧</span> Access Points</button>
+    <button data-page="Analytics"><span>▥</span> Analytics</button>
+    <button data-page="Alerts"><span>♧</span> Alerts <b class="count">2</b></button>
+    <button data-page="Settings"><span>⚙</span> Settings</button>
+  </nav>
+  <div class="sidebar-foot"><div style="font-size:25px;margin-bottom:8px">◉</div><strong>NETSPOT v1.0</strong><small>Smart Campus Connectivity</small></div>
+</aside>
+<main>
+  <header class="topbar">
+    <div class="toplinks"><span>CONNECT</span> / <span>MONITOR</span> / <span>OPTIMIZE</span></div>
+    <div class="university">♙ &nbsp; <b>Graphic Era University</b><span>Dehradun, Uttarakhand</span></div>
+    <div class="date">Mon, 21 Oct 2026<br><span id="clock">09:50 AM</span><br><span class="live">● Live Data</span></div>
+  </header>
+  <section class="heading"><div><h2 id="pageTitle">SYSTEM OVERVIEW</h2><p id="pageSubtitle">CAMPUS NETWORK STATUS</p></div><div class="health"><span><i class="dot"></i> Network Health</span><b style="color:var(--green)">● Good</b><span style="border-left:1px solid var(--line);padding-left:12px">⌁ &nbsp; Uptime<br><b>99.2%</b></span></div></section>
+  <section class="metrics">
+    <article class="metric"><div class="metric-top"><div class="metric-icon">⌁</div> ACTIVE ACCESS POINTS</div><div class="value">24 <small>/ 28</small></div><div class="trend">▲ 7%</div><svg class="spark" viewBox="0 0 100 35"><polyline points="0,30 12,22 20,25 30,15 40,19 52,8 64,13 77,10 88,4 100,0"/></svg></article>
+    <article class="metric"><div class="metric-top"><div class="metric-icon">▣</div> CONNECTED DEVICES</div><div class="value">1,204</div><div class="trend">▲ 12%</div><svg class="spark" viewBox="0 0 100 35"><polyline points="0,30 12,23 20,27 30,17 40,21 52,9 64,13 77,8 88,12 100,0"/></svg></article>
+    <article class="metric"><div class="metric-top"><div class="metric-icon">▥</div> AVG SIGNAL</div><div class="value">-58 <small>dBm</small></div><div class="trend">▲ 6%</div><svg class="spark" viewBox="0 0 100 35"><polyline points="0,28 12,18 20,23 30,12 40,17 52,7 64,12 77,8 88,11 100,1"/></svg></article>
+    <article class="metric"><div class="metric-top"><div class="metric-icon">◴</div> DOWNLOAD SPEED</div><div class="value">86 <small>Mbps</small></div><div class="trend">▲ 18%</div><svg class="spark" viewBox="0 0 100 35"><polyline points="0,29 12,20 20,24 30,13 40,17 52,8 64,12 77,7 88,10 100,0"/></svg></article>
+  </section>
+  <section class="content-grid">
+    <div class="left-column">
+      <section class="panel">
+        <h3 class="panel-title"><span>◫ &nbsp; CAMPUS COVERAGE MAP</span><small>⌖ &nbsp; N</small></h3>
+        <div class="map" id="campusMap">
+          <div class="road"></div><div class="road r2"></div><div class="road r3"></div>
+          <div class="heat h1"></div><div class="heat h2"></div><div class="heat h3"></div><div class="heat h4"></div><div class="heat h5"></div><div class="heat h6"></div>
+          <div class="building b1">Hostel Block</div><div class="building b2">Academic Block</div><div class="building b3">Library Block</div><div class="building b4">Engineering Block</div><div class="building b5">Cafeteria</div><div class="building b6">Admin Block</div><div class="building b7">Sports Complex</div>
+          <button class="pin warn p1" title="Hostel Block: fair signal" data-location="Hostel Block">⌁</button><button class="pin p2" title="Hostel Block: good signal" data-location="Hostel Block">⌁</button><button class="pin p3" title="Academic Block: good signal" data-location="Academic Block">⌁</button><button class="pin warn p4" title="Engineering Block: fair signal" data-location="Engineering Block">⌁</button><button class="pin bad p5" title="Library Block: weak signal" data-location="Library Block">⌁</button><button class="pin warn p6" title="Engineering Block: fair signal" data-location="Engineering Block">⌁</button><button class="pin p7" title="Engineering Block: good signal" data-location="Engineering Block">⌁</button><button class="pin p8" title="Admin Block: good signal" data-location="Admin Block">⌁</button><button class="pin warn p9" title="Sports Complex: fair signal" data-location="Sports Complex">⌁</button><button class="pin p10" title="Cafeteria: good signal" data-location="Cafeteria">⌁</button><button class="pin warn p11" title="Admin Block: fair signal" data-location="Admin Block">⌁</button>
+          <div class="compass">N<br>➤</div><div class="zoom"><button id="zoomIn">+</button><button id="zoomOut">−</button></div>
+          <div class="legend">Signal Strength (dBm)<br><span><i class="good"></i>-30 to -50 (Good)</span><span><i class="fair"></i>-51 to -70 (Fair)</span><span><i class="weak"></i>-71 to -90 (Weak)</span><span>◯ No Signal</span></div>
+        </div>
+      </section>
+      <section class="panel">
+        <h3 class="panel-title"><span>♧ &nbsp; RECENT READINGS</span><small><span class="live">Live ●</span> &nbsp;&nbsp; Last Updated: <span id="updated">09:50 AM</span></small></h3>
+        <div class="table-wrap"><table><thead><tr><th>#</th><th>LOCATION</th><th>ACCESS POINT</th><th>SIGNAL (dBm)</th><th>DOWNLOAD (Mbps)</th><th>PING (ms)</th><th>TIMESTAMP</th><th></th></tr></thead><tbody id="readings">
+          <tr><td>1</td><td>Academic Block (CSE)</td><td>AP-03</td><td class="signal-good">▥ &nbsp; -52</td><td>82.4</td><td>28</td><td>09:50:12 AM</td><td><i class="status-dot"></i></td></tr>
+          <tr><td>2</td><td>Library Block</td><td>AP-07</td><td class="signal-bad">▥ &nbsp; -82</td><td>34.7</td><td>186</td><td>09:49:56 AM</td><td><i class="status-dot bad"></i></td></tr>
+          <tr><td>3</td><td>Engineering Block</td><td>AP-11</td><td class="signal-good">▥ &nbsp; -61</td><td>66.2</td><td>64</td><td>09:49:32 AM</td><td><i class="status-dot warn"></i></td></tr>
+          <tr><td>4</td><td>Hostel Block</td><td>AP-15</td><td class="signal-good">▥ &nbsp; -48</td><td>91.3</td><td>32</td><td>09:49:18 AM</td><td><i class="status-dot"></i></td></tr>
+          <tr><td>5</td><td>Cafeteria</td><td>AP-18</td><td class="signal-bad">▥ &nbsp; -70</td><td>52.6</td><td>98</td><td>09:48:47 AM</td><td><i class="status-dot warn"></i></td></tr>
+        </tbody></table></div>
+      </section>
+    </div>
+    <aside class="right-column">
+      <section class="panel"><h3 class="panel-title"><span style="color:#ff617c">♧ &nbsp; NETWORK ALERTS</span><button id="viewAlerts" style="border:0;background:none;color:#77b9a8;font-size:12px">View All →</button></h3>
+        <div class="alert"><div class="alert-head"><span>⚠ Weak Signal Detected</span><small>08:42 AM</small></div><p>Library Block</p><small>Signal strength is below -75 dBm<br>(Current: -82 dBm)</small></div>
+        <div class="alert red"><div class="alert-head"><span>⚠ High Latency</span><small>07:16 AM</small></div><p>Engineering Lab</p><small>Ping is above 150 ms<br>(Current: 186 ms)</small></div>
+      </section>
+      <section class="panel"><h3 class="panel-title">⌁ &nbsp; NETWORK STATUS</h3>
+        <div class="status-row"><span class="status-name">⌁ &nbsp; Wi-Fi Network</span><button class="toggle" aria-label="Toggle Wi-Fi Network"></button></div>
+        <div class="status-row"><span class="status-name">◎ &nbsp; Internet Connectivity</span><button class="toggle" aria-label="Toggle Internet Connectivity"></button></div>
+        <div class="status-row"><span class="status-name">▤ &nbsp; DHCP Service</span><button class="toggle" aria-label="Toggle DHCP Service"></button></div>
+        <div class="status-row"><span class="status-name">⬡ &nbsp; Firewall</span><button class="toggle" aria-label="Toggle Firewall"></button></div>
+        <div class="status-row"><span class="status-name">◉ &nbsp; Load Balancing</span><button class="toggle" aria-label="Toggle Load Balancing"></button></div>
+      </section>
+      <section class="panel"><h3 class="panel-title">QUICK ACTIONS</h3><button class="action" id="refresh" style="width:100%;padding:9px;background:#06392e;border:1px solid #087b64;border-radius:6px;margin-bottom:8px">↻ &nbsp; Refresh readings</button><button class="action" id="export" style="width:100%;padding:9px;background:#06392e;border:1px solid #087b64;border-radius:6px">⇩ &nbsp; Export CSV</button></section>
+    </aside>
+  </section>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const toast=document.getElementById('toast');
+function notify(message){toast.textContent=message;toast.style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>toast.style.display='none',2400)}
+document.querySelectorAll('.nav button').forEach(button=>button.addEventListener('click',()=>{
+ document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));button.classList.add('active');
+ const page=button.dataset.page;document.getElementById('pageTitle').textContent=page==='Dashboard'?'SYSTEM OVERVIEW':page.toUpperCase();
+ document.getElementById('pageSubtitle').textContent=page==='Dashboard'?'CAMPUS NETWORK STATUS':page.toUpperCase()+' — CAMPUS NETWORK';
+ if(page!=='Dashboard')notify(page+' view selected — demo interface');
+}));
+document.querySelectorAll('.toggle').forEach(toggle=>toggle.addEventListener('click',()=>{
+ toggle.classList.toggle('off');const label=toggle.closest('.status-row').querySelector('.status-name').textContent.trim();
+ notify(label+' '+(toggle.classList.contains('off')?'OFF':'ON'));
+}));
+document.querySelectorAll('.pin').forEach(pin=>pin.addEventListener('click',()=>notify(pin.dataset.location+': '+pin.title.split(': ')[1])));
+document.getElementById('viewAlerts').addEventListener('click',()=>{document.querySelector('[data-page="Alerts"]').click();notify('Showing current network alerts')});
+let zoom=1;document.getElementById('zoomIn').addEventListener('click',()=>{zoom=Math.min(1.35,zoom+.1);document.getElementById('campusMap').style.backgroundSize=(zoom*100)+'% '+(zoom*100)+'%';notify('Map zoom: '+Math.round(zoom*100)+'%')});
+document.getElementById('zoomOut').addEventListener('click',()=>{zoom=Math.max(.8,zoom-.1);document.getElementById('campusMap').style.backgroundSize=(zoom*100)+'% '+(zoom*100)+'%';notify('Map zoom: '+Math.round(zoom*100)+'%')});
+function updateClock(){const now=new Date();document.getElementById('clock').textContent=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});}
+updateClock();setInterval(updateClock,60000);
+document.getElementById('refresh').addEventListener('click',()=>{const now=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});document.getElementById('updated').textContent=now;document.querySelectorAll('#readings tr').forEach(row=>{row.cells[6].textContent=now});notify('Demo readings refreshed at '+now)});
+document.getElementById('export').addEventListener('click',()=>{const rows=[...document.querySelectorAll('table tr')].map(row=>[...row.cells].map(cell=>'"'+cell.innerText.replace(/"/g,'""')+'"').join(','));const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='netspot-readings.csv';a.click();URL.revokeObjectURL(url);notify('CSV exported')});
+</script>
+</body>
+</html>
