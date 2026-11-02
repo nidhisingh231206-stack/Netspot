@@ -19,6 +19,7 @@ NetworkReading::NetworkReading(
       downloadSpeed(downloadSpeed),
       uploadSpeed(uploadSpeed),
       latency(latency),
+      ping(ping),
       latitude(latitude),
       longitude(longitude),
       location(location),
@@ -46,10 +47,8 @@ string NetworkReading::getSignalQuality() const
 void NetworkReading::display() const
 {
     cout << fixed << setprecision(2);
-
     cout << "\n========== NETSPOT READING ==========\n";
     cout << "Location: " << location << '\n';
-
     cout << "Signal strength: ";
     if (signalStrength)
         cout << *signalStrength << " dBm";
@@ -79,6 +78,13 @@ void NetworkReading::display() const
     else
         cout << "Unavailable";
     cout << '\n';
+
+    cout<<"Ping: ";
+    if(ping)
+        cout<<*ping<<"ms";
+    else
+        cout<<"Unavailable";
+    cout<<'\n';
 
     cout << "Latitude: ";
     if (latitude)
@@ -115,6 +121,11 @@ optional<double> NetworkReading::getUploadSpeed() const
 optional<double> NetworkReading::getLatency() const
 {
     return latency;
+}
+
+optional<double> NetworkReading::getPing() const
+{
+    return ping;
 }
 
 optional<double> NetworkReading::getLatitude() const
