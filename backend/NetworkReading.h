@@ -13,10 +13,9 @@ private:
     std::optional<double> downloadSpeed;
     std::optional<double> uploadSpeed;
     std::optional<double> latency;
-
+    std::optional<double> ping;
     std::optional<double> latitude;
     std::optional<double> longitude;
-
     std::string location;
     std::chrono::system_clock::time_point timestamp;
 
@@ -38,7 +37,7 @@ public:
     std::optional<double> getDownloadSpeed() const;
     std::optional<double> getUploadSpeed() const;
     std::optional<double> getLatency() const;
-
+    std::optional<double> getPing() const;
     std::optional<double> getLatitude() const;
     std::optional<double> getLongitude() const;
 
