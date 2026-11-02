@@ -5,6 +5,9 @@
 #include "ReadingList.h"
 #include "json.hpp"
 #include <cmath>
+#include <algorithm>
+#include <fstream>
+#include <sstream>
 
 using json = nlohmann::json;
 
@@ -14,6 +17,21 @@ int main()
 
     // Linked-list storage for incoming readings
     ReadingList readings;
+
+    server.Get("/", [](const httplib::Request& req,
+                   httplib::Response& res)
+    {
+        std::ifstream file("netspot_dashboard.html");
+        if (!file)
+        {
+            res.status = 404;
+            res.set_content("netspot_dashboard.html not found", "text/plain");
+            return;
+        }
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        res.set_content(buffer.str(), "text/html");
+    });
 
     // 1. Health check endpoint
     server.Get("/health",
@@ -47,6 +65,42 @@ int main()
 
             res.set_content(latest, "application/json");
         });
+
+   // GET API: Fetch recent readings for dashboard
+        server.Get("/api/readings",
+            [&readings](const httplib::Request& req,
+                httplib::Response& res)
+        {
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_header("Cache-Control", "no-store");
+            size_t limit = 20;
+            if (req.has_param("limit"))
+            {
+                try {
+                    limit = std::stoul(req.get_param_value("limit"));
+                }
+                catch (...) {
+                    limit = 20;
+                }
+            }
+            limit = std::min<size_t>(
+            std::max<size_t>(limit, 1), 500);
+            json list = json::array();
+            for (const auto& item : readings.getRecent(limit))
+            {
+                json reading = json::parse(item, nullptr, false);
+                if (!reading.is_discarded())
+                list.push_back(reading);
+            }
+            json response = {
+                {"total", readings.size()},
+                {"readings", list}
+            };
+            res.set_content(
+            response.dump(),
+            "application/json"
+        );
+    });
 
     // 3. Handle browser CORS preflight requests
     server.Options("/api/reading",
