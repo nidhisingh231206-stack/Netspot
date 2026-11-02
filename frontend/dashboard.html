@@ -1,0 +1,204 @@
+<main>
+    <header class="topbar">
+        <div>CONNECT &nbsp; / &nbsp; MONITOR &nbsp; / &nbsp; OPTIMIZE</div>
+        <div>
+            <strong>Graphic Era University</strong><br>
+            Dehradun, Uttarakhand
+        </div>
+        <div>
+            <span id="clock"></span><br>
+            <span class="good">● Live Data</span>
+        </div>
+    </header>
+
+    <h2 id="pageTitle">SYSTEM OVERVIEW</h2>
+    <p class="subtitle">CAMPUS NETWORK STATUS</p>
+
+    <section class="metrics">
+        <article class="metric">
+            <h4>⌁ ACTIVE ACCESS POINTS</h4>
+            <div class="value">24 <small>/ 28</small></div>
+            <small>▲ 7%</small>
+        </article>
+
+        <article class="metric">
+            <h4>▣ CONNECTED DEVICES</h4>
+            <div class="value">1,204</div>
+            <small>▲ 12%</small>
+        </article>
+
+        <article class="metric">
+            <h4>▥ AVG SIGNAL</h4>
+            <div class="value">-58 <small>dBm</small></div>
+            <small>▲ 6%</small>
+        </article>
+
+        <article class="metric">
+            <h4>◴ DOWNLOAD SPEED</h4>
+            <div class="value">86 <small>Mbps</small></div>
+            <small>▲ 18%</small>
+        </article>
+    </section>
+
+    <section class="content">
+        <div class="left">
+
+            <section class="panel">
+                <h3>▧ CAMPUS COVERAGE MAP</h3>
+
+                <div class="map" id="campusMap">
+                    <div class="building hostel">Hostel Block</div>
+                    <div class="building academic">Academic Block</div>
+                    <div class="building library">Library Block</div>
+                    <div class="building engineering">Engineering Block</div>
+                    <div class="building sports">Sports Complex</div>
+                    <div class="building cafe">Cafetaria</div>
+                    <div class="building admin">Admin Block</div>
+
+                    <button class="pin warning p1" data-place="Hostel Block">⌁</button>
+                    <button class="pin p2" data-place="Hostel Block">⌁</button>
+                    <button class="pin p3" data-place="Academic Block">⌁</button>
+                    <button class="pin warning p4" data-place="Engineering Block">⌁</button>
+                    <button class="pin danger p5" data-place="Library Block">⌁</button>
+                    <button class="pin p6" data-place="Engineering Block">⌁</button>
+                    <button class="pin warning p7" data-place="Sports Complex">⌁</button>
+                    <button class="pin p8" data-place="Cafeteria">⌁</button>
+                    <button class="pin warning p9" data-place="Admin Block">⌁</button>
+
+                    <div class="legend">
+                        Signal Strength (dBm)<br>
+                        <span class="good">● -30 to -50 Good</span>
+                        <span class="medium">● -51 to -70 Fair</span>
+                        <span class="bad">● -71 to -90 Weak</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h3>⌁ RECENT READINGS</h3>
+
+                <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>LOCATION</th>
+                            <th>ACCESS POINT</th>
+                            <th>SIGNAL</th>
+                            <th>DOWNLOAD</th>
+                            <th>PING</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="readings">
+                        <tr>
+                            <td>1</td>
+                            <td>Academic Block</td>
+                            <td>AP-03</td>
+                            <td class="good">-52 dBm</td>
+                            <td>82.4 Mbps</td>
+                            <td>28 ms</td>
+                            <td class="good">●</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Library Block</td>
+                            <td>AP-07</td>
+                            <td class="bad">-82 dBm</td>
+                            <td>34.7 Mbps</td>
+                            <td>186 ms</td>
+                            <td class="bad">●</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Engineering Block</td>
+                            <td>AP-11</td>
+                            <td class="medium">-61 dBm</td>
+                            <td>66.2 Mbps</td>
+                            <td>64 ms</td>
+                            <td class="medium">●</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>Hostel Block</td>
+                            <td>AP-15</td>
+                            <td class="good">-48 dBm</td>
+                            <td>91.3 Mbps</td>
+                            <td>32 ms</td>
+                            <td class="good">●</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Cafeteria</td>
+                            <td>AP-18</td>
+                            <td class="medium">-70 dBm</td>
+                            <td>52.6 Mbps</td>
+                            <td>98 ms</td>
+                            <td class="medium">●</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+
+                <button class="action" id="export">↓ Export readings as CSV</button>
+            </section>
+        </div>
+
+        <aside class="right">
+            <section class="panel">
+                <h3>♧ NETWORK ALERTS</h3>
+
+                <div class="alert">
+                    <strong>⚠ Weak Signal Detected</strong>
+                    Library Block<br>
+                    <p>Signal below -75 dBm.<br>
+                    Current: -82 dBm</p>
+                </div>
+
+                <div class="alert danger">
+                    <strong>⚠ High Latency</strong>
+                    Engineering Lab<br>
+                    <p>Ping above 150 ms.<br>
+                    Current: 186 ms</p>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h3>⌁ NETWORK STATUS</h3>
+
+                <div class="status-row">
+                    Wi-Fi Network
+                    <button class="toggle" aria-label="Toggle Wi-Fi"></button>
+                </div>
+
+                <div class="status-row">
+                    Internet Connectivity
+                    <button class="toggle" aria-label="Toggle Internet"></button>
+                </div>
+
+                <div class="status-row">
+                    DHCP Service
+                    <button class="toggle" aria-label="Toggle DHCP"></button>
+                </div>
+
+                <div class="status-row">
+                    Firewall
+                    <button class="toggle" aria-label="Toggle Firewall"></button>
+                </div>
+
+                <div class="status-row">
+                    Load Balancing
+                    <button class="toggle" aria-label="Toggle Load Balancing"></button>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h3>QUICK ACTIONS</h3>
+                <button class="action" id="refresh">↻ Refresh Readings</button>
+                <button class="action" id="zoomIn">＋ Zoom Map In</button>
+                <button class="action" id="zoomOut">－ Zoom Map Out</button>
+            </section>
+        </aside>
+    </section>
+</main>
