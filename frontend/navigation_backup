@@ -1,0 +1,13 @@
+// Sidebar navigation
+document.querySelectorAll(".nav button").forEach(button => {
+    button.addEventListener("click", () => {
+        document.querySelectorAll(".nav button").forEach(item => {
+            item.classList.remove("active");
+        });
+        button.classList.add("active");
+        const page = button.dataset.page;
+        document.getElementById("pageTitle").textContent =
+            page === "Dashboard" ? "SYSTEM OVERVIEW" : page.toUpperCase();
+        notify(page + " selected");
+    });
+});
