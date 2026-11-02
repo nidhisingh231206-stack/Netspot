@@ -4,6 +4,10 @@
 
 #include <string>
 #include <cstddef>
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <mutex>
 
 class ReadingList
 {
@@ -12,21 +16,24 @@ private:
     {
         std::string data;
         Node* next;
-
-        explicit Node(const std::string& value)
-            : data(value), next(nullptr)
+        Node(const std::string& value)
         {
+            data = value;
+            next = nullptr;
         }
     };
 
     Node* head;
     Node* tail;
     std::size_t count;
+    mutable std::mutex mtx;
 
 public:
     ReadingList()
-        : head(nullptr), tail(nullptr), count(0)
     {
+        head = nullptr;
+        tail = nullptr;
+        count = 0;
     }
 
     // Prevent accidental copying of linked-list pointers
@@ -36,6 +43,7 @@ public:
     // Insert a reading at the end of the list
     void append(const std::string& reading)
     {
+        std::lock_guard<std::mutex> lock(mtx);
         Node* newNode = new Node(reading);
 
         if (head == nullptr)
@@ -49,12 +57,13 @@ public:
             tail = newNode;
         }
 
-        ++count;
+        count++;
     }
 
     // Return the most recently stored reading
     bool getLatest(std::string& reading) const
     {
+        std::lock_guard<std::mutex> lock(mtx);
         if (tail == nullptr)
         {
             return false;
@@ -64,13 +73,43 @@ public:
         return true;
     }
 
+    std::vector<std::string> getRecent(std::size_t limit) const
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+
+        std::vector<std::string> result;
+
+        std::size_t take = std::min(limit, count);
+        std::size_t skip = count - take;
+
+        Node* current = head;
+
+        while (current != nullptr && skip > 0)
+        {
+            current = current->next;
+            skip--;
+        }
+
+        while (current != nullptr)
+        {
+            result.push_back(current->data);
+            current = current->next;
+        }
+
+        std::reverse(result.begin(), result.end());
+
+        return result;
+    }
+
     std::size_t size() const
     {
+        std::lock_guard<std::mutex> lock(mtx);
         return count;
     }
 
     bool isEmpty() const
     {
+        std::lock_guard<std::mutex> lock(mtx);
         return head == nullptr;
     }
 
