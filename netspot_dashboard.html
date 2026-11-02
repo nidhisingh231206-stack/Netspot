@@ -137,5 +137,226 @@ updateClock();setInterval(updateClock,60000);
 document.getElementById('refresh').addEventListener('click',()=>{const now=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});document.getElementById('updated').textContent=now;document.querySelectorAll('#readings tr').forEach(row=>{row.cells[6].textContent=now});notify('Demo readings refreshed at '+now)});
 document.getElementById('export').addEventListener('click',()=>{const rows=[...document.querySelectorAll('table tr')].map(row=>[...row.cells].map(cell=>'"'+cell.innerText.replace(/"/g,'""')+'"').join(','));const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='netspot-readings.csv';a.click();URL.revokeObjectURL(url);notify('CSV exported')});
 </script>
+<div id="gpsStatus"
+     style="position:fixed;bottom:10px;left:10px;
+     background:#063b2e;color:white;padding:12px;
+     z-index:99999">
+    Checking GPS...
+</div>
+
+<script>
+const statusBox = document.getElementById("gpsStatus");
+
+statusBox.textContent = "Requesting location...";
+
+
+async function refreshReadings() {
+    try {
+        const response = await fetch('/api/readings?limit=20');
+
+        if (!response.ok) {
+            throw new Error("API error: " + response.status);
+        }
+
+        const data = await response.json();
+        const readings = data.readings || [];
+
+        if (readings.length > 0) {
+            const latest = readings[0];
+
+            statusBox.textContent =
+                "LIVE RSSI: " +
+                latest.signalStrengthDbm + " dBm | " +
+                "Source: " + latest.source;
+        }
+
+    } catch (error) {
+        statusBox.textContent =
+            "Reading error: " + error.message;
+    }
+}
+
+refreshReadings();
+setInterval(refreshReadings, 2000);
+</script>
+<script>
+(() => {
+    const API = location.origin + "/api";
+    const table = document.getElementById("readings");
+    const updated = document.getElementById("updated");
+    const metrics = document.querySelectorAll(".metrics .metric .value");
+    const map = document.getElementById("campusMap");
+
+    let lastGpsSent = 0;
+
+    // Live status on campus map
+    const liveBox = document.createElement("div");
+    liveBox.style.cssText =
+        "position:absolute;top:12px;left:12px;z-index:6;" +
+        "background:#03251f;color:#55ffd0;padding:12px;" +
+        "border:1px solid #00f5b8;border-radius:6px;font-size:14px;";
+
+    liveBox.textContent = "Connecting to live Wi-Fi...";
+    map.appendChild(liveBox);
+
+    // Hide demonstration pins and heat spots
+    document.querySelectorAll(".pin,.heat").forEach(el => {
+        el.style.display = "none";
+    });
+
+    // GPS collection
+    function startGPS() {
+        if (!navigator.geolocation) {
+            liveBox.textContent = "GPS unavailable";
+            return;
+        }
+
+        navigator.geolocation.watchPosition(async position => {
+            if (Date.now() - lastGpsSent < 10000) return;
+            lastGpsSent = Date.now();
+
+            const gps = {
+                device: "MacBook",
+                source: "browser-geolocation",
+                location: "Current MacBook Location",
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                timestamp: new Date().toISOString(),
+                simulated: false
+            };
+
+            try {
+                const response = await fetch(API + "/reading", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(gps)
+                });
+
+                if (!response.ok) throw new Error("GPS API failed");
+
+                liveBox.textContent = "GPS connected | Live location received";
+
+            } catch (error) {
+                liveBox.textContent = "GPS upload failed";
+                console.error(error);
+            }
+
+        }, error => {
+            liveBox.textContent = "GPS: " + error.message;
+        }, {
+            enableHighAccuracy: true,
+            maximumAge: 5000,
+            timeout: 20000
+        });
+    }
+
+    // Fetch actual readings from C++ API
+    async function refreshDashboard() {
+        try {
+            const response = await fetch(
+                API + "/readings?limit=20&t=" + Date.now(),
+                { cache: "no-store" }
+            );
+
+            if (!response.ok) throw new Error("API connection failed");
+
+            const data = await response.json();
+            const readings = data.readings || [];
+
+            const signals = readings.filter(r =>
+                typeof r.signalStrengthDbm === "number" &&
+                Number.isFinite(r.signalStrengthDbm) &&
+                r.simulated !== true
+            );
+
+            // Remove fake campus-wide figures
+            metrics[0].textContent = "Unavailable";
+            metrics[1].textContent = "Unavailable";
+
+            // Actual average signal
+            if (signals.length) {
+                const average = signals.reduce(
+                    (sum, r) => sum + r.signalStrengthDbm, 0
+                ) / signals.length;
+
+                metrics[2].innerHTML =
+                    Math.round(average) + " <small>dBm</small>";
+
+                const latest = signals[0];
+
+                liveBox.textContent =
+                    "LIVE RSSI: " + latest.signalStrengthDbm +
+                    " dBm | Source: " + latest.source;
+            }
+
+            // Speed is unavailable until a real speed test is added
+            const speedValues = readings.filter(r =>
+                typeof r.downloadMbps === "number"
+            );
+
+            if (speedValues.length) {
+                const speed = speedValues[0].downloadMbps;
+                metrics[3].innerHTML =
+                    speed.toFixed(2) + " <small>Mbps</small>";
+            } else {
+                metrics[3].innerHTML = "— <small>Mbps</small>";
+            }
+
+            // Update readings table
+            table.replaceChildren();
+
+            if (!readings.length) {
+                const row = table.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 8;
+                cell.textContent = "Waiting for live readings...";
+            }
+
+            readings.forEach((item, index) => {
+                const row = table.insertRow();
+
+                const values = [
+                    index + 1,
+                    item.location || "MacBook",
+                    item.device || item.source || "Unknown",
+                    item.signalStrengthDbm == null
+                        ? "—"
+                        : item.signalStrengthDbm + " dBm",
+                    item.downloadMbps == null
+                        ? "—"
+                        : item.downloadMbps + " Mbps",
+                    item.latencyMs == null
+                        ? "—"
+                        : item.latencyMs + " ms",
+                    item.timestamp
+                        ? new Date(item.timestamp).toLocaleTimeString()
+                        : "—",
+                    item.simulated === false ? "LIVE" : "—"
+                ];
+
+                values.forEach(value => {
+                    row.insertCell().textContent = value;
+                });
+            });
+
+            updated.textContent = new Date().toLocaleTimeString();
+
+        } catch (error) {
+            liveBox.textContent = "API ERROR: " + error.message;
+            console.error("NetSpot:", error);
+        }
+    }
+
+    // Start monitoring
+    startGPS();
+    refreshDashboard();
+
+    // Refresh dashboard every 3 seconds
+    setInterval(refreshDashboard, 3000);
+
+})();
+</script>
 </body>
 </html>
